@@ -80,25 +80,32 @@ export default {
       },
       keyframes: {
         'accordion-down': {
-          from: {
-            height: '0',
-          },
-          to: {
-            height: 'var(--radix-accordion-content-height)',
-          },
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
         },
         'accordion-up': {
-          from: {
-            height: 'var(--radix-accordion-content-height)',
-          },
-          to: {
-            height: '0',
-          },
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+
+        // 🎉 NEW animations for glowing spinning button
+        'spin-slow': {
+          '0%': { transform: 'rotate(0deg)', filter: 'drop-shadow(0 0 5px #ff0) drop-shadow(0 0 10px #0ff) drop-shadow(0 0 20px #f0f)' },
+          '50%': { transform: 'rotate(180deg)', filter: 'drop-shadow(0 0 20px #f0f) drop-shadow(0 0 40px #00f) drop-shadow(0 0 60px #ffd700)' },
+          '100%': { transform: 'rotate(360deg)', filter: 'drop-shadow(0 0 5px #ff0) drop-shadow(0 0 15px #0ff) drop-shadow(0 0 25px #f0f)' },
+        },
+        flicker: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
         },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+
+        // 🎉 NEW animation utilities
+        'spin-slow': 'spin-slow 3s linear infinite',
+        'flicker': 'flicker 1.5s infinite alternate',
       },
     },
   },

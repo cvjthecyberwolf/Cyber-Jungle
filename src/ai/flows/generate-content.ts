@@ -1,44 +1,66 @@
 'use server';
 /**
- * @fileOverview A content generation AI agent.
- *
- * - generateContent - A function that handles the content generation process.
- * - GenerateContentInput - The input type for the generateContent function.
- * - GenerateContentOutput - The return type for the generateContent function.
+ * @fileOverview A video generation AI agent using RunwayML API.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { MediaPart } from 'genkit/model';
 
-const GenerateContentInputSchema = z.object({
-  prompt: z.string().describe('The prompt to generate content from.'),
+const GenerateVideoInputSchema = z.object({
+  prompt: z.string().describe('The prompt to generate the video.'),
+  imageDataUri: z
+    .string()
+    .optional()
+    .describe("An optional image (as Data URI) to use as a reference for the video."),
 });
-export type GenerateContentInput = z.infer<typeof GenerateContentInputSchema>;
+export type GenerateVideoInput = z.infer<typeof GenerateVideoInputSchema>;
 
-const GenerateContentOutputSchema = z.object({
-  content: z.string().describe('The generated content.'),
+const GenerateVideoOutputSchema = z.object({
+  videoUrl: z.string().describe('The generated video download URL.'),
 });
-export type GenerateContentOutput = z.infer<typeof GenerateContentOutputSchema>;
+export type GenerateVideoOutput = z.infer<typeof GenerateVideoOutputSchema>;
 
-export async function generateContent(input: GenerateContentInput): Promise<GenerateContentOutput> {
-  return generateContentFlow(input);
+export async function generateVideo(input: GenerateVideoInput): Promise<GenerateVideoOutput> {
+  return generateVideoFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateContentPrompt',
-  input: {schema: GenerateContentInputSchema},
-  output: {schema: GenerateContentOutputSchema},
-  prompt: `Generate content based on the following prompt:\n\n{{{prompt}}}`,
-});
-
-const generateContentFlow = ai.defineFlow(
+const generateVideoFlow = ai.defineFlow(
   {
-    name: 'generateContentFlow',
-    inputSchema: GenerateContentInputSchema,
-    outputSchema: GenerateContentOutputSchema,
+    name: 'generateVideoFlow',
+    inputSchema: GenerateVideoInputSchema,
+    outputSchema: GenerateVideoOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    // Build request payload
+    const body: any = {
+      prompt: input.prompt,
+    };
+
+    if (input.imageDataUri) {
+      body.image = input.imageDataUri;
+    }
+
+    // Call RunwayML API
+    const response = await fetch('https://api.runwayml.com/v1/video/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RUNWAYML_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`RunwayML API Error: ${error}`);
+    }
+
+    const result = await response.json();
+
+    // Return video URL from RunwayML response
+    return {
+      videoUrl: result?.data?.[0]?.url || '',
+    };
   }
 );
