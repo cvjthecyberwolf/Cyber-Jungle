@@ -9,8 +9,10 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import wav from 'wav';
-import {ModelArgument} from 'genkit/model';
+// 'wav' has no types; import as any
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const wav: any = require('wav');
+import type {ModelArgument} from 'genkit/model';
 
 const TextToSpeechInputSchema = z.object({
   text: z.string().describe('The text to be converted to speech.'),
@@ -63,7 +65,8 @@ const textToSpeechFlow = ai.defineFlow(
   async input => {
     const isMultiSpeaker = /Speaker\s*[12]:/.test(input.text);
 
-    let speechConfig: ModelArgument<'generate'>['config']['speechConfig'];
+    // Using a loose type here to avoid dependency on internal generic constraints
+    let speechConfig: any;
 
     if (isMultiSpeaker) {
       speechConfig = {

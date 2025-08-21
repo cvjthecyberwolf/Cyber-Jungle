@@ -41,7 +41,7 @@ const generateVideoFlow = ai.defineFlow(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.RUNWAYML_API_KEY}`, // your key in .env
+          Authorization: `Bearer ${process.env.RUNWAY_API_KEY}`, // standardized env name
         },
         body: JSON.stringify({
           prompt: input.prompt,
