@@ -1,66 +1,50 @@
 'use server';
 /**
- * @fileOverview A video generation AI agent using RunwayML API.
+ * @fileOverview Text content generation flow.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { MediaPart } from 'genkit/model';
 
-const GenerateVideoInputSchema = z.object({
-  prompt: z.string().describe('The prompt to generate the video.'),
-  imageDataUri: z
-    .string()
-    .optional()
-    .describe("An optional image (as Data URI) to use as a reference for the video."),
+// --------- Input/Output Schemas ----------
+const GenerateContentInputSchema = z.object({
+  prompt: z.string().min(1).describe('The prompt to generate text content.'),
 });
-export type GenerateVideoInput = z.infer<typeof GenerateVideoInputSchema>;
+export type GenerateContentInput = z.infer<typeof GenerateContentInputSchema>;
 
-const GenerateVideoOutputSchema = z.object({
-  videoUrl: z.string().describe('The generated video download URL.'),
+const GenerateContentOutputSchema = z.object({
+  content: z.string().describe('The generated text content.'),
 });
-export type GenerateVideoOutput = z.infer<typeof GenerateVideoOutputSchema>;
+export type GenerateContentOutput = z.infer<typeof GenerateContentOutputSchema>;
 
-export async function generateVideo(input: GenerateVideoInput): Promise<GenerateVideoOutput> {
-  return generateVideoFlow(input);
+// --------- Public API ----------
+export async function generateContent(
+  input: GenerateContentInput
+): Promise<GenerateContentOutput> {
+  return generateContentFlow(input);
 }
 
-const generateVideoFlow = ai.defineFlow(
+// --------- Flow Definition ----------
+const generateContentFlow = ai.defineFlow(
   {
-    name: 'generateVideoFlow',
-    inputSchema: GenerateVideoInputSchema,
-    outputSchema: GenerateVideoOutputSchema,
+    name: 'generateContentFlow',
+    inputSchema: GenerateContentInputSchema,
+    outputSchema: GenerateContentOutputSchema,
   },
   async input => {
-    // Build request payload
-    const body: any = {
+    // Use the default model configured in ai/genkit.ts unless overridden here
+    const result = await ai.generate({
+      model: 'googleai/gemini-2.0-flash',
       prompt: input.prompt,
-    };
-
-    if (input.imageDataUri) {
-      body.image = input.imageDataUri;
-    }
-
-    // Call RunwayML API
-    const response = await fetch('https://api.runwayml.com/v1/video/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.RUNWAYML_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`RunwayML API Error: ${error}`);
+    // Try common return fields, fallback to string coercion if needed
+    const content = (result as any).text ?? (result as any).output ?? '';
+
+    if (!content || typeof content !== 'string') {
+      throw new Error('Failed to generate content.');
     }
 
-    const result = await response.json();
-
-    // Return video URL from RunwayML response
-    return {
-      videoUrl: result?.data?.[0]?.url || '',
-    };
+    return { content };
   }
 );

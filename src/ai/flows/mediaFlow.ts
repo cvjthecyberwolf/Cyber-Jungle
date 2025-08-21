@@ -1,5 +1,5 @@
-import { generateVideo } from "../generate-video";
-import { textToSpeech } from "../text-to-speech";
+import { generateVideo } from "./generate-video";
+import { textToSpeech } from "./text-to-speech";
 
 /**
  * Full media generation flow:
@@ -10,10 +10,10 @@ import { textToSpeech } from "../text-to-speech";
 export async function mediaFlow(prompt: string) {
   try {
     console.log("🎙️ Generating narration...");
-    const audioUrl = await textToSpeech(prompt);
+    const { audioUrl } = await textToSpeech({ text: prompt });
 
     console.log("🎬 Generating video...");
-    const videoUrl = await generateVideo(prompt, "gen2"); // or "gen3-alpha"
+    const { videoUrl } = await generateVideo({ prompt });
 
     return {
       prompt,

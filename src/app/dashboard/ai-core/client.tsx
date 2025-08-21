@@ -217,7 +217,7 @@ export function AiCoreClient() {
         prompt: data.prompt,
         imageDataUri: selectedImageUrl,
       });
-      setAnimationUrl(result.videoUrl);
+      setAnimationUrl(result.videoUrl ?? null);
       resetAnimation();
     } catch (error: any) {
        console.error(error);
